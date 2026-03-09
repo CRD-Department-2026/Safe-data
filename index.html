@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chia sẻ file an toàn với Firebase</title>
+    <title>Chia sẻ file an toàn với Cloudinary</title>
     <style>
-        /* (giữ nguyên style như đã cung cấp ở câu trả lời trước) */
+        /* Toàn bộ style giữ nguyên như phiên bản trước */
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
         body {
             background: #f0f2f5;
@@ -34,21 +34,21 @@
             gap: 10px;
         }
         .badge {
-            background: #dcfce7;
-            color: #166534;
+            background: #fef08a;
+            color: #854d0e;
             padding: 4px 14px;
             border-radius: 40px;
             font-size: 0.8rem;
             font-weight: 600;
         }
-        .sub {
-            color: #4b5563;
-            margin-bottom: 24px;
-            border-left: 5px solid #2563eb;
-            padding-left: 18px;
-            background: #eef2ff;
-            border-radius: 0 20px 20px 0;
-            line-height: 1.5;
+        .warning {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 20px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border-left: 6px solid #dc2626;
+            font-size: 0.95rem;
         }
         .user-panel {
             background: #f8fafc;
@@ -76,10 +76,6 @@
             width: 240px;
             outline: none;
         }
-        .user-info input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px #bfdbfe;
-        }
         .btn {
             background: #0a2647;
             color: white;
@@ -98,10 +94,7 @@
             border: 1px solid #0a2647;
         }
         .btn-outline:hover { background: #eef2ff; }
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .section {
             background: white;
             border-radius: 28px;
@@ -201,33 +194,34 @@
             margin-top: 20px;
         }
     </style>
+    <!-- Không cần SDK riêng, dùng fetch -->
 </head>
 <body>
-<div class="app-container" id="app">
-    <h1>🔒 ShareSecure <span class="badge">Firebase</span></h1>
-    <div class="sub">Chỉ người có email khớp với người nhận mới xem được file · không thể chia sẻ link cho người khác</div>
+<div class="app-container">
+    <h1>🔒 ShareSecure <span class="badge">Cloudinary</span></h1>
+    <div class="warning">
+        ⚠️ <strong>CẢNH BÁO BẢO MẬT:</strong> API Secret được nhúng trong code. Chỉ dùng cho mục đích học tập trên localhost. Không đưa lên môi trường công cộng.
+    </div>
 
-    <!-- Khu vực đăng nhập -->
+    <!-- Khu vực đăng nhập giả lập (dùng email) -->
     <div class="user-panel">
         <div class="user-info">
-            <span style="font-weight: 500;">👤 Email:</span>
+            <span style="font-weight: 500;">👤 Email của bạn:</span>
             <input type="email" id="emailInput" placeholder="your@email.com" value="demo@example.com">
-            <input type="password" id="passwordInput" placeholder="Mật khẩu" value="123456">
-            <button class="btn" id="loginBtn">Đăng nhập / Đăng ký</button>
         </div>
         <div>
             <span id="userDisplay" style="background: #e0f2fe; padding: 8px 16px; border-radius: 40px;">Chưa đăng nhập</span>
         </div>
     </div>
 
-    <!-- View gửi file -->
+    <!-- View gửi file (ẩn/hiện bằng JS) -->
     <div id="homeView">
         <div class="section">
             <div class="section-title">📤 1. Chọn file để gửi</div>
             <div class="file-drop" id="fileDrop">
                 <div class="icon">📁</div>
-                <p>Nhấp để chọn hoặc kéo thả file</p>
-                <small>Hỗ trợ: PDF, hình ảnh, video, ... (dung lượng tối đa 20MB)</small>
+                <p>Nhấp để chọn file</p>
+                <small>Hỗ trợ: ảnh, PDF, video (dung lượng tối đa 20MB)</small>
                 <input type="file" id="fileInput" style="display: none;">
             </div>
             <div class="file-info" id="selectedFileInfo">Chưa chọn file</div>
@@ -239,7 +233,7 @@
                 <label>Email người nhận (người duy nhất được phép xem)</label>
                 <div class="input-wrapper">
                     <input type="email" id="recipientEmail" placeholder="nguoinhan@example.com" value="khach@doitac.vn">
-                    <button class="btn" id="uploadBtn" disabled>📤 Tải lên & tạo link</button>
+                    <button class="btn" id="uploadBtn">📤 Tải lên & tạo link</button>
                 </div>
             </div>
         </div>
@@ -251,7 +245,7 @@
                 <span id="shareLink"></span>
                 <button class="btn-outline" id="copyLinkBtn">Sao chép</button>
             </div>
-            <p style="font-size:0.9rem; color:#4b5563; margin-top:12px;">👉 Hãy thử đăng nhập bằng email khác và mở link này để kiểm tra.</p>
+            <p style="font-size:0.9rem;">👉 Hãy thử đăng nhập bằng email khác và mở link này để kiểm tra.</p>
         </div>
     </div>
 
@@ -265,56 +259,224 @@
     </div>
 
     <div class="footer-note">
-        ⚙️ Dữ liệu được lưu trên Firebase. Bạn cần tự cấu hình Firebase và Security Rules (xem hướng dẫn trong code).
+        ⚙️ Cloudinary + client‑side signing (không an toàn). Cần backend cho production.
     </div>
 </div>
 
-<!-- Firebase SDK (v8 compat) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-
 <script>
-    // Cấu hình Firebase của bạn (đã được cung cấp)
-    const firebaseConfig = {
-        apiKey: "AIzaSyCUlmPNGGZepAQCjWRiMXCUgwKOybDKTgA",
-        authDomain: "safe-data-vsip.firebaseapp.com",
-        projectId: "safe-data-vsip",
-        storageBucket: "safe-data-vsip.firebasestorage.app", // KIỂM TRA LẠI BUCKET NÀY
-        messagingSenderId: "513097304094",
-        appId: "1:513097304094:web:5ee839d9bc17e57b3e460f",
-        measurementId: "G-WMEXYB6HDK"
-    };
+    // ========== THÔNG TIN CLOUDINARY (CỦA BẠN) ==========
+    const CLOUD_NAME = 'drypv8xjh';
+    const API_KEY = '536211586514541';
+    const API_SECRET = 'HxIDgmVHJopnX_HdgadjFY3WRuo'; // ⚠️ RỦI RO LỘ SECRET
+    const UPLOAD_PRESET = 'my_unsigned_preset'; // ✅ Đã thay bằng tên preset của bạn
 
-    // Khởi tạo Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const storage = firebase.storage();
+    // ====================================================
 
-    // (Phần còn lại của code JavaScript giống hệt như đã cung cấp trước đó)
-    // ... (bạn có thể copy toàn bộ phần script từ câu trả lời trước, từ dòng "Lấy các phần tử DOM" đến hết)
+    let currentFile = null;
+    let currentUserEmail = null;
+    let uploadedPublicId = null;
+    let uploadedRecipient = null;
 
-    // Để ngắn gọn, tôi sẽ nhắc bạn chèn phần script đầy đủ từ câu trả lời trước vào đây.
-    // Vui lòng copy đoạn script từ file trước (bắt đầu từ "// Lấy các phần tử DOM" đến cuối) và dán vào dưới dòng này.
-</script>
+    // DOM elements
+    const homeView = document.getElementById('homeView');
+    const viewerView = document.getElementById('viewerView');
+    const viewContent = document.getElementById('viewContent');
+    const emailInput = document.getElementById('emailInput');
+    const userDisplay = document.getElementById('userDisplay');
+    const fileDrop = document.getElementById('fileDrop');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFileInfo = document.getElementById('selectedFileInfo');
+    const recipientEmail = document.getElementById('recipientEmail');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const resultArea = document.getElementById('resultArea');
+    const shareLinkSpan = document.getElementById('shareLink');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const backToHomeBtn = document.getElementById('backToHomeBtn');
 
-<!-- Hướng dẫn cấu hình Firebase (ẩn) -->
-<div style="display: none;">
-    HƯỚNG DẪN:
-    1. Vào Firebase Console → Storage → Rules, đặt rules như sau:
-        rules_version = '2';
-        service firebase.storage {
-          match /b/{bucket}/o {
-            match /shared/{fileId} {
-              allow write: if request.auth != null;
-              allow read: if request.auth != null 
-                          && request.auth.token.email == resource.metadata.recipientEmail;
-            }
-          }
+    // Cập nhật user khi nhập email
+    function updateUser() {
+        const email = emailInput.value.trim();
+        if (email) {
+            currentUserEmail = email;
+            userDisplay.textContent = email;
+        } else {
+            currentUserEmail = null;
+            userDisplay.textContent = 'Chưa đăng nhập';
         }
-    2. Bật Authentication → Sign-in method → Email/Password.
-    3. Kiểm tra lại storageBucket: Vào Storage → xem tên bucket (thường là safe-data-vsip.appspot.com). Nếu không đúng, sửa lại trong firebaseConfig.
-    4. Mở file này trong trình duyệt (tốt nhất qua live server hoặc deploy).
-</div>
+    }
+    emailInput.addEventListener('input', updateUser);
+    updateUser(); // lần đầu
+
+    // Chọn file
+    fileDrop.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 20 * 1024 * 1024) {
+            alert('File quá lớn (>20MB).');
+            return;
+        }
+        currentFile = file;
+        selectedFileInfo.innerHTML = `✅ Đã chọn: <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
+    });
+
+    // Upload file lên Cloudinary (client-side)
+    uploadBtn.addEventListener('click', async () => {
+        if (!currentUserEmail) {
+            alert('Vui lòng nhập email của bạn (ở trên).');
+            return;
+        }
+        if (!currentFile) {
+            alert('Vui lòng chọn file.');
+            return;
+        }
+        const recipient = recipientEmail.value.trim();
+        if (!recipient) {
+            alert('Vui lòng nhập email người nhận.');
+            return;
+        }
+
+        // Tạo context string chứa recipient và sender
+        const context = `recipient=${recipient}|sender=${currentUserEmail}`;
+
+        // Upload dùng unsigned preset
+        const formData = new FormData();
+        formData.append('file', currentFile);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('context', context);
+        formData.append('type', 'authenticated'); // quan trọng: file ở chế độ authenticated
+
+        try {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.error) {
+                alert('Lỗi upload: ' + data.error.message);
+                return;
+            }
+
+            uploadedPublicId = data.public_id;
+            uploadedRecipient = recipient;
+
+            // Tạo link chia sẻ (gửi kèm recipient để kiểm tra)
+            const shareUrl = new URL(window.location.href);
+            shareUrl.searchParams.set('view', uploadedPublicId);
+            shareUrl.searchParams.set('recipient', uploadedRecipient);
+            shareUrl.hash = '';
+            shareLinkSpan.textContent = shareUrl.toString();
+            resultArea.classList.remove('hidden');
+
+            // Reset file
+            currentFile = null;
+            fileInput.value = '';
+            selectedFileInfo.innerHTML = 'Chưa chọn file';
+        } catch (err) {
+            alert('Lỗi kết nối: ' + err.message);
+        }
+    });
+
+    // Sao chép link
+    copyLinkBtn.addEventListener('click', () => {
+        const link = shareLinkSpan.textContent;
+        navigator.clipboard.writeText(link).then(() => {
+            alert('Đã sao chép link!');
+        }).catch(() => {
+            alert('Không thể sao chép tự động, hãy copy tay.');
+        });
+    });
+
+    // Xử lý routing dựa trên tham số ?view
+    function handleRoute() {
+        const params = new URLSearchParams(window.location.search);
+        const publicId = params.get('view');
+        const recipientParam = params.get('recipient');
+
+        if (publicId) {
+            homeView.classList.add('hidden');
+            viewerView.classList.remove('hidden');
+            loadSharedFile(publicId, recipientParam);
+        } else {
+            homeView.classList.remove('hidden');
+            viewerView.classList.add('hidden');
+            resultArea.classList.add('hidden');
+        }
+    }
+
+    // Tải file từ Cloudinary (tạo signed URL)
+    async function loadSharedFile(publicId, expectedRecipient) {
+        if (!currentUserEmail) {
+            viewContent.innerHTML = `<div class="access-denied">🔒 Vui lòng nhập email của bạn (ở trên) để xem nội dung.</div>`;
+            return;
+        }
+
+        // Kiểm tra email người xem có khớp với recipient không
+        if (currentUserEmail !== expectedRecipient) {
+            viewContent.innerHTML = `<div class="access-denied">⛔ Truy cập bị từ chối. File chỉ dành cho <strong>${expectedRecipient}</strong>, nhưng bạn đang dùng <strong>${currentUserEmail}</strong>.</div>`;
+            return;
+        }
+
+        // Tạo signed URL cho authenticated asset
+        // Công thức: SHA1(public_id + api_secret) - theo tài liệu Cloudinary
+        const toSign = publicId + API_SECRET;
+        const signature = await sha1(toSign);
+        // Đối với file không phải ảnh, cần chỉ định resource_type. Thử dùng "image" mặc định, nếu không được sẽ chuyển sang "video" hoặc "raw"
+        let signedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/image/authenticated/s--${signature}--/${publicId}`;
+
+        // Thử fetch để kiểm tra (nếu không có quyền, Cloudinary trả về lỗi 403)
+        try {
+            const response = await fetch(signedUrl, { method: 'HEAD' });
+            if (!response.ok) {
+                // Thử với resource_type là "raw" nếu thất bại
+                signedUrl = `https://res.cloudinary.com/${CLOUD_NAME}/raw/authenticated/s--${signature}--/${publicId}`;
+                const response2 = await fetch(signedUrl, { method: 'HEAD' });
+                if (!response2.ok) {
+                    throw new Error('Không thể truy cập');
+                }
+            }
+
+            // Xác định loại file dựa vào phần mở rộng (có thể lấy từ context, nhưng tạm dùng đuôi)
+            const ext = publicId.split('.').pop().toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+                // Dùng URL ảnh đã ký
+                viewContent.innerHTML = `<div class="file-viewer"><img src="${signedUrl}" style="max-width:100%; max-height:500px;"></div>`;
+            } else if (ext === 'pdf') {
+                // PDF cần dùng loại raw? Thực tế PDF có thể dùng resource_type image nhưng không hiển thị, nên dùng raw và nhúng iframe
+                // Cloudinary có hỗ trợ pdf dưới dạng image nếu dùng ?fl_attachment, nhưng ở đây ta dùng raw
+                const pdfUrl = `https://res.cloudinary.com/${CLOUD_NAME}/raw/authenticated/s--${signature}--/${publicId}`;
+                viewContent.innerHTML = `<div class="file-viewer"><iframe src="${pdfUrl}" width="100%" height="600px"></iframe></div>`;
+            } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                const videoUrl = `https://res.cloudinary.com/${CLOUD_NAME}/video/authenticated/s--${signature}--/${publicId}`;
+                viewContent.innerHTML = `<div class="file-viewer"><video controls style="max-width:100%; max-height:500px;"><source src="${videoUrl}"></video></div>`;
+            } else {
+                // Các file khác cho tải về
+                viewContent.innerHTML = `<div class="file-viewer"><p>Không thể xem trước loại file này.</p><a href="${signedUrl}" download class="btn">📥 Tải xuống</a></div>`;
+            }
+        } catch (err) {
+            viewContent.innerHTML = `<div class="access-denied">❌ Không thể truy cập file. File không tồn tại hoặc lỗi xác thực.</div>`;
+        }
+    }
+
+    // Hàm băm SHA1 dùng Web Crypto API
+    async function sha1(message) {
+        const msgUint8 = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Quay lại trang chủ
+    backToHomeBtn.addEventListener('click', () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('view');
+        url.searchParams.delete('recipient');
+        window.history.pushState({}, '', url);
+        handleRoute();
+    });
+
+    window.addEventListener('popstate', handleRoute);
+    handleRoute();
+</script>
 </body>
 </html>
